@@ -1,3 +1,6 @@
+### v4.5 - 6.25.2022
+* Update jdsp libs
+
 ### v4.4 - 1.31.2022
 * Update to MMT-Ex v2.0 - support for magisk 24 module update method
 
