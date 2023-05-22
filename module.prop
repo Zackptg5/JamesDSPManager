@@ -1,7 +1,7 @@
 id=ainur_jamesdsp
 name=JamesDSP Manager
-version=v4.6 (8-4-2022)
-versionCode=86
+version=v4.7 (8-4-2022)
+versionCode=87
 author=james34602, zackptg5, ahrion
 description=JamesDSPManager is a reformed audio engine based of AOSP and OmniROM DSPManager source code with enhanced features and tuning
 support=https://forum.xda-developers.com/android/apps-games/app-reformed-dsp-manager-t3607970

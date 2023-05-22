@@ -1,3 +1,6 @@
+### v4.7 - 5.22.23
+* Update mmtex v2.1 - fix for magisk v26+
+
 ### v4.6 - 8.4.22
 * Update jdsp libs
 
