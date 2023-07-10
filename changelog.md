@@ -1,7 +1,10 @@
-### v4.7 - 5.22.23
+### v4.8 - 7.10.2023
+* Update mmtex to v3.0 - adds support for ksu and magisk delta
+
+### v4.7 - 5.22.2023
 * Update mmtex v2.1 - fix for magisk v26+
 
-### v4.6 - 8.4.22
+### v4.6 - 8.4.2022
 * Update jdsp libs
 
 ### v4.5 - 6.25.2022

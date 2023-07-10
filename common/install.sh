@@ -25,7 +25,8 @@ fi
 
 ui_print " "
 ui_print "- Select Huawei -"
-ui_print "   Is this a Huawei device?"
+ui_print "   Is this a device with 64bit audio libs (like huawei)?"
+ui_print "   If unsure, select 'No'"
 ui_print "   Vol Up = Yes, Vol Down = No"
 if chooseport; then
   QARCH="huawei"
@@ -37,14 +38,17 @@ cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib/soundfx/li
 
 # App only works when installed normally to data in oreo+
 install_script -l $MODPATH/common/files/jdsp.sh
+sed -i "/jdsp.sh/d" $INFO
 INSVER=$(pm list packages -3 --show-versioncode | grep james.dsp | sed 's/.*versionCode://')
 [ "$INSVER" ] && { [ $INSVER -lt $APPVER ] && pm uninstall james.dsp >/dev/null; }
 
 ui_print " "
 ui_print "   Patching existing audio_effects files..."
-CFGS="$(find /system /vendor -type f -name "*audio_effects*.conf" -o -name "*audio_effects*.xml")"
+PARTITIONS="/system /vendor $PARTITIONS"
+CFGS="$(find $PARTITIONS -type f -name "*audio_effects*.conf" -o -name "*audio_effects*.xml")"
 for OFILE in ${CFGS}; do
   FILE="$MODPATH$(echo $OFILE | sed "s|^/vendor|/system/vendor|g")"
+  $KSU && FILE="$(echo $FILE | sed "s|^/odm|/system/odm|g")"
   cp_ch -n $ORIGDIR$OFILE $FILE
   osp_detect $FILE
   case $FILE in
@@ -59,5 +63,7 @@ for OFILE in ${CFGS}; do
   esac
 done
 
+ui_print "   Copying apk to /sdcard. Install manually if not present on reboot"
 cp -rf $MODPATH/common/files/JamesDSP /storage/emulated/0/JamesDSP
-[ $API -gt 29 ] && { ui_print "   Enabling hidden api policy"; settings put global hidden_api_policy 1; }
+cp -f $MODPATH/JamesDSPManager.apk /storage/emulated/0/JamesDSPManager.apk
+[ $API -gt 29 ] && { ui_print "   Enabling hidden api policy"; settings put global hidden_api_policy 1 2>/dev/null; }
