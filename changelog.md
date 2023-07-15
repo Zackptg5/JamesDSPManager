@@ -1,3 +1,12 @@
+### v5.0 - 7.15.2023
+* JDSP app updated!:
+  * LiveProg update: Clean up EEL RAM disk before new script being loaded
+  * EEL engine update:
+    * Unify string, thread pool, convolver in one virtual data type
+    * Introduce efficient running min/max, median filter
+    * Allow STFT window function to be specified
+    * Correct STFT phase value(Yield no difference for any previous scripts that depends on relative phase / magnitude only spectral processing)
+
 ### v4.8 - 7.10.2023
 * Update mmtex to v3.0 - adds support for ksu and magisk delta
 
