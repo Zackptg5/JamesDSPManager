@@ -48,7 +48,7 @@ PARTITIONS="/system /vendor $PARTITIONS"
 CFGS="$(find $PARTITIONS -type f -name "*audio_effects*.conf" -o -name "*audio_effects*.xml")"
 for OFILE in ${CFGS}; do
   FILE="$MODPATH$(echo $OFILE | sed "s|^/vendor|/system/vendor|g")"
-  $KSU && FILE="$(echo $FILE | sed "s|^/odm|/system/odm|g")"
+  $KSU || FILE="$(echo $FILE | sed "s|$MODPATH/odm|$MODPATH/system/odm|g")"
   cp_ch -n $ORIGDIR$OFILE $FILE
   osp_detect $FILE
   case $FILE in
@@ -62,6 +62,13 @@ for OFILE in ${CFGS}; do
            sed -i "/<effects>/ a\        <effect name=\"jamesdsp\" library=\"jdsp\" uuid=\"f27317f4-c984-4de6-9a90-545759495bf2\"\/>" $FILE;;
   esac
 done
+
+# ODM support for regular magisk
+if $EXTRAPART || [ ! -d $MODPATH/system/odm ]; then
+  rm -f $MODPATH/service.sh
+else
+  sed -i "1a NVBASE=$NVBASE" $MODPATH/service.sh
+fi
 
 ui_print "   Copying apk to /sdcard. Install manually if not present on reboot"
 cp -rf $MODPATH/common/files/JamesDSP /storage/emulated/0/JamesDSP

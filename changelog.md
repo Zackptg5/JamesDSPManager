@@ -1,3 +1,8 @@
+### v5.1 - 7.25.2023
+* Bug fix for odm on KSU and magisk delta
+* Updated to mmtex v3.1
+  * Added support for odm in regular magisk (should fix oneplus device issues) - thanks to @ShadoV90 (https://t.me/ShadoV90) for the fix
+
 ### v5.0 - 7.15.2023
 * JDSP app updated!:
   * LiveProg update: Clean up EEL RAM disk before new script being loaded
