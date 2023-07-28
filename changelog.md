@@ -1,3 +1,7 @@
+### v5.2 - 7.28.2023
+* Bug fix with osp removal
+* Add thepbone APK option
+
 ### v5.1 - 7.25.2023
 * Bug fix for odm on KSU and magisk delta
 * Updated to mmtex v3.1

@@ -8,9 +8,19 @@ osp_detect() {
             done;;
      *.xml) EFFECTS=$(sed -n "/^ *<postprocess>$/,/^ *<\/postprocess>$/ {/^ *<stream type=\"music\">$/,/^ *<\/stream>$/ {/<stream type=\"music\">/d; /<\/stream>/d; s/<apply effect=\"//g; s/\"\/>//g; p}}" $1)
             for EFFECT in ${EFFECTS}; do
-              [ "$EFFECT" != "atmos" ] && sed -ri "s/^( *)<apply effect=\"$EFFECT\"\/>/\1<\!--<apply effect=\"$EFFECT\"\/>-->/" $1
+              [ "$EFFECT" != "atmos" ] && sed -ri "/^( *)<apply effect=\"$EFFECT\"\/>/d" $1
             done;;
   esac
+}
+
+uninstall_app() {
+  local FILE=".apk$1" VER=$2
+  [ -z $INSVER ] && return 0
+  if [ -f $NVBASE/modules/$MODID/$FILE ]; then
+    [ $INSVER -lt $VER ] && pm uninstall -k james.dsp
+  else
+    pm uninstall james.dsp
+  fi
 }
 
 # Tell user aml is needed if applicable
@@ -24,15 +34,17 @@ if [ ! -z "$FILES" ] && [ ! "$(echo $FILES | grep '/aml/')" ]; then
 fi
 
 ui_print " "
-ui_print "- Select Huawei -"
-ui_print "   Is this a device with 64bit audio libs (like huawei)?"
+ui_print "- Select 64 bit only -"
+ui_print "   Is this a device with 64bit only audio libs (like huawei)?"
 ui_print "   If unsure, select 'No'"
 ui_print "   Vol Up = Yes, Vol Down = No"
 if chooseport; then
   QARCH="huawei"
   cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib64/soundfx/libjamesdsp.so
+  ui_print "   64 bit libs selected"
 else
   QARCH=$ARCH32
+  ui_print "   32 bit libs selected"
 fi
 cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib/soundfx/libjamesdsp.so
 
@@ -40,7 +52,22 @@ cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib/soundfx/li
 install_script -l $MODPATH/common/files/jdsp.sh
 sed -i "/jdsp.sh/d" $INFO
 INSVER=$(pm list packages -3 --show-versioncode | grep james.dsp | sed 's/.*versionCode://')
-[ "$INSVER" ] && { [ $INSVER -lt $APPVER ] && pm uninstall james.dsp >/dev/null; }
+
+ui_print " "
+ui_print "- UI installation -"
+ui_print "   Which UI you want to install?"
+ui_print "   Vol Up = Original, Vol Down = ThePBone"
+if chooseport; then
+  ui_print "   Original version was selected"
+  mv -f $MODPATH/common/files/JamesDSPManager.apk $MODPATH/JamesDSPManager.apk
+  touch $MODPATH/.apkorig
+  uninstall_app "orig" $APPVER
+else
+  ui_print "   ThePBone version was selected"
+  mv -f $MODPATH/common/files/JamesDSPManagerThePBone.apk $MODPATH/JamesDSPManager.apk
+  touch $MODPATH/.apkpbone
+  uninstall_app "pbone" $PAPPVER
+fi
 
 ui_print " "
 ui_print "   Patching existing audio_effects files..."

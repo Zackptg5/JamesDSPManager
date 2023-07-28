@@ -1,15 +1,13 @@
 (
-while [ "$(getprop sys.boot_completed)" != "1" ] && [ ! -d "/storage/emulated/0/Android" ]; do
+while [ "$(getprop sys.boot_completed)" != "1" ]; do
   sleep 1
 done
+sleep 3
 
 APP=$(pm list packages -3 | grep james.dsp)
 
 if [ ! -d "$MODPATH" ]; then
-  if [ "$APP" ]; then
-    pm uninstall james.dsp
-    rm -rf /data/data/james.dsp
-  fi
+  [ "$APP" ] && pm uninstall james.dsp
   rm $0
   exit 0
 elif [ "$APP" ]; then
