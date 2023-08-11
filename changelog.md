@@ -1,3 +1,6 @@
+### v5.3 - 8.11.2023
+* Update mmtex to v3.2
+
 ### v5.2 - 7.28.2023
 * Bug fix with osp removal
 * Add thepbone APK option
