@@ -1,9 +1,3 @@
-(
-while [ "$(getprop sys.boot_completed)" != "1" ]; do
-  sleep 1
-done
-sleep 3
-
 APP=$(pm list packages -3 | grep james.dsp)
 
 if [ ! -d "$MODPATH" ]; then
@@ -22,4 +16,3 @@ elif [ ! -f "$MODPATH/disable" ] && [ ! "$APP" ]; then
   pm disable james.dsp
   pm enable james.dsp
 fi
-)&

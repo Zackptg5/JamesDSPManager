@@ -49,7 +49,7 @@ fi
 cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib/soundfx/libjamesdsp.so
 
 # App only works when installed normally to data in oreo+
-install_script -l $MODPATH/common/files/jdsp.sh
+install_script -b $MODPATH/common/files/jdsp.sh
 sed -i "/jdsp.sh/d" $INFO
 INSVER=$(pm list packages -3 --show-versioncode | grep james.dsp | sed 's/.*versionCode://')
 

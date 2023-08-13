@@ -1,3 +1,7 @@
+### v5.4 - 8.13.2023
+* Update to mmtex v3.3
+* Update the thepbone jdsp app
+
 ### v5.3 - 8.11.2023
 * Update mmtex to v3.2
 
