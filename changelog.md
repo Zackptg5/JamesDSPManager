@@ -1,3 +1,8 @@
+### v5.5 - 8.21.2023
+* Update official apk:
+  * Introduce fully functional continuous wavelet transform to dynamic range compander as a experimental trial
+  * Use custom implementation of libsamplerate, the file no longer bloat with coefficients
+
 ### v5.4 - 8.13.2023
 * Update to mmtex v3.3
 * Update the thepbone jdsp app
