@@ -1,3 +1,6 @@
+### v5.6 - 8.24.2023
+* Lib bug fix
+
 ### v5.5 - 8.21.2023
 * Update official apk:
   * Introduce fully functional continuous wavelet transform to dynamic range compander as a experimental trial
