@@ -33,24 +33,34 @@ if [ ! -z "$FILES" ] && [ ! "$(echo $FILES | grep '/aml/')" ]; then
   sleep 3
 fi
 
+#Lib detection
+LIB=$(dumpsys media.audio_flinger | grep -E 'lib|lib64' | awk -F '/' 'NR==1{print $3}')
 ui_print " "
-ui_print "- Select 64 bit only -"
-ui_print "   Is this a device with 64bit only audio libs (like huawei)?"
-ui_print "   If unsure, select 'No'"
-ui_print "   Vol Up = Yes, Vol Down = No"
-if chooseport; then
+ui_print "- Lib bit detection -"
+if [ $LIB == "lib64" ]; then
   QARCH="huawei"
+  ui_print "   64 bit audio libs detected  "
   cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib64/soundfx/libjamesdsp.so
-  ui_print "   64 bit libs selected"
-else
+elif [ $LIB == "lib" ]; then
   QARCH=$ARCH32
-  ui_print "   32 bit libs selected"
+  ui_print "   32 bit audio libs detected  "
+else
+  ui_print "   Unable to detect audio lib bit...  "
+  ui_print "   Is this a device with 64bit only audio libs (like huawei)?"
+  ui_print "   If unsure, select 'No'"
+  ui_print "   Vol Up = Yes, Vol Down = No"
+  if chooseport; then
+    QARCH="huawei"
+    cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib64/soundfx/libjamesdsp.so
+    ui_print "   64 bit libs selected"
+  else
+    QARCH=$ARCH32
+    ui_print "   32 bit libs selected"
+  fi
 fi
 cp_ch $MODPATH/common/files/$QARCH/libjamesdsp.so $MODPATH/system/lib/soundfx/libjamesdsp.so
 
 # App only works when installed normally to data in oreo+
-install_script -b $MODPATH/common/files/jdsp.sh
-sed -i "/jdsp.sh/d" $INFO
 INSVER=$(pm list packages -3 --show-versioncode | grep james.dsp | sed 's/.*versionCode://')
 
 ui_print " "

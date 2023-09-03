@@ -1,3 +1,7 @@
+### v5.7 - 9.3.2023
+* Automatic 32/64 bit lib detection
+* mmtex v3.4 update
+
 ### v5.6 - 8.24.2023
 * Lib bug fix
 
