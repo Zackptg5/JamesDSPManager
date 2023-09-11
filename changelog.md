@@ -1,3 +1,7 @@
+### v5.8 - 9.11.2023
+* Update pbone apk
+* mmtex v3.5 update
+
 ### v5.7 - 9.3.2023
 * Automatic 32/64 bit lib detection
 * mmtex v3.4 update
