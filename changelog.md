@@ -1,5 +1,6 @@
 ### v5.8 - 9.11.2023
 * Update pbone apk
+* Update jdsp app/libs
 * mmtex v3.5 update
 
 ### v5.7 - 9.3.2023
