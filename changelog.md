@@ -1,3 +1,8 @@
+### v6.0 - 2.16.2024
+* mmtex v3.6 update
+* Update pbone apk
+* Update jdsp app/libs
+
 ### v5.8 - 9.11.2023
 * Update pbone apk
 * Update jdsp app/libs

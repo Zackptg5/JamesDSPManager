@@ -1,0 +1,97 @@
+desc: Simple FDN reverb
+wet_gain:-9<-60,0,0.5>Wet gain
+dry_gain:-0.5<-60,0,0.5>Wet gain
+preset_index:1<0,9,1>Which preset we use
+
+@init
+function db2mag(db)
+(
+  pow(10, db / 20);
+);
+function fc2alpha(rc, srate)
+(
+  dt = 1.0 / srate;
+  dt / (rc + dt);
+);
+function ceilpower2(x)
+(
+	x -= 1;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x += 1;
+	x;
+);
+presetsMemoryAddress = 0;
+presetLen = importFLTFromStr("7.6621208791039e-06,0.661865234375,-0.50927734375,0,0,-0.54296875,0.6875,0.6484375,500,364,4952,3276,4032,2204,3536,1980,3280,1748,0,0,0,0,0,0,0,0,1744,1240,736,368,6.04853630647995e-06,0.622314453125,-0.5244140625,0.53173828125,-0.49267578125,-0.78125,0.64453125,0.615234375,204,148,3984,3180,3728,2748,3528,2456,3184,2420,2416,1592,2236,1236,1864,732,1596,724,720,512,304,152,6.04853630647995e-06,0.622314453125,-0.5244140625,0.53955078125,-0.50830078125,-0.587890625,0.64453125,0.615234375,708,508,9232,7596,8336,6524,7816,6232,7600,6068,6064,4280,5180,3092,4488,2780,4284,2452,2448,1736,1024,512,6.76963645673823e-06,0.622314453125,-0.5244140625,0.53955078125,-0.50830078125,-0.69921875,0.67578125,0.646484375,908,676,14316,11616,13348,10480,12132,9676,11620,9064,9060,6052,8112,4800,7100,3912,6056,3188,3184,2272,1360,680,1.51171580000664e-05,0.625,0.59375,-0.5625,-0.53125,-0.5,0.75,0.71875,1684,1252,22248,18156,21256,17140,18160,14084,18176,14092,14080,9988,12048,7940,10240,6964,9992,5892,5888,4200,2512,1256,6.04853630647995e-06,0.622314453125,-0.5244140625,0.53955078125,-0.50830078125,-0.9609375,0.74609375,0.662109375,92,76,3524,2748,2964,1916,2752,1884,3424,2472,1880,1144,1204,708,1148,356,1664,908,352,256,160,80,7.19864658549341e-07,0.625,-0.59375,-0.625,0.59375,-0.625,0.75,0.65625,3316,2244,31576,26820,29776,24812,28424,23240,26824,22460,22456,16724,19664,15540,18392,12660,16728,11140,11136,7816,4496,2248,1.38405942262665e-09,0.999969482421875,0,0,0,-0.9921875,0,0,4,4,32764,16380,16404,20,0,0,16404,20,0,0,0,0,0,0,0,0,16400,16392,16,8,1.38405942262665e-09,0.999969482421875,0,0,0,0,0,0,4,4,32764,16380,16404,20,0,0,16404,20,0,0,0,0,0,0,0,0,16400,16392,16,8,1.48603177070618,0,0,0,0,0,0,0,0,0,4,4,4,4,4,4,0,0,4,4,4,4,4,4,0,0,4,4,4,4", presetsMemoryAddress);
+BufferAddress = 0;
+spu_buffer_count = ceilpower2(ceil(49184 * (srate / 22050.0)));
+spu_buffer_count_mask = spu_buffer_count - 1; // <-- we can use this for quick circular buffer access
+spu_buffer = presetsMemoryAddress + presetLen; //spu_buffer_count
+// Parameter start
+wet_gain = -9; // dB
+dry_gain = -0.5; // dB
+preset_index = 6; // 0 - 9
+//printf("Printing preset start\n");
+//j=0;loop(presetLen, printf("%d %1.8f\n", j + 1, presetsMemoryAddress[j]);j+=1);
+//printf("Printing preset end\n");
+//breakpoint();
+// Parameter end
+wet = db2mag(wet_gain);
+dry = db2mag(dry_gain);
+stretch_factor = srate / 22050.0;
+preset_index = (preset_index < 0) ? 0 : ((preset_index > 9) ? 9 : preset_index);
+printf("preset_index = %d\n", preset_index);
+ptr = presetsMemoryAddress + 30 * preset_index;
+vIIR = fc2alpha(ptr[0], srate);
+vCOMB1 = ptr[1];
+vCOMB2 = ptr[2];
+vCOMB3 = ptr[3];
+vCOMB4 = ptr[4];
+vWALL = ptr[5];
+vAPF1 = ptr[6];
+vAPF2 = ptr[7];
+dAPF1 = ptr[8] * stretch_factor;
+dAPF2 = ptr[9] * stretch_factor;
+mLSAME = ptr[10] * stretch_factor;
+mRSAME = ptr[11] * stretch_factor;
+mLCOMB1 = ptr[12] * stretch_factor;
+mRCOMB1 = ptr[13] * stretch_factor;
+mLCOMB2 = ptr[14] * stretch_factor;
+mRCOMB2 = ptr[15] * stretch_factor;
+dLSAME = ptr[16] * stretch_factor;
+dRSAME = ptr[17] * stretch_factor;
+mLDIFF = ptr[18] * stretch_factor;
+mRDIFF = ptr[19] * stretch_factor;
+mLCOMB3 = ptr[20] * stretch_factor;
+mRCOMB3 = ptr[21] * stretch_factor;
+mLCOMB4 = ptr[22] * stretch_factor;
+mRCOMB4 = ptr[23] * stretch_factor;
+dLDIFF = ptr[24] * stretch_factor;
+dRDIFF = ptr[25] * stretch_factor;
+mLAPF1 = ptr[26] * stretch_factor;
+mRAPF1 = ptr[27] * stretch_factor;
+mLAPF2 = ptr[28] * stretch_factor;
+mRAPF2 = ptr[29] * stretch_factor;
+
+@sample
+// same side reflection
+spu_buffer[((mLSAME) + BufferAddress) & spu_buffer_count_mask] = (spl0 + spu_buffer[((dLSAME) + BufferAddress) & spu_buffer_count_mask] * vWALL - spu_buffer[((mLSAME - 1) + BufferAddress) & spu_buffer_count_mask]) * vIIR + spu_buffer[((mLSAME - 1) + BufferAddress) & spu_buffer_count_mask];
+spu_buffer[((mRSAME) + BufferAddress) & spu_buffer_count_mask] = (spl1 + spu_buffer[((dRSAME) + BufferAddress) & spu_buffer_count_mask] * vWALL - spu_buffer[((mRSAME - 1) + BufferAddress) & spu_buffer_count_mask]) * vIIR + spu_buffer[((mRSAME - 1) + BufferAddress) & spu_buffer_count_mask];
+// different side reflection
+spu_buffer[((mLDIFF) + BufferAddress) & spu_buffer_count_mask] = (spl0 + spu_buffer[((dRDIFF) + BufferAddress) & spu_buffer_count_mask] * vWALL - spu_buffer[((mLDIFF - 1) + BufferAddress) & spu_buffer_count_mask]) * vIIR + spu_buffer[((mLDIFF - 1) + BufferAddress) & spu_buffer_count_mask];
+spu_buffer[((mRDIFF) + BufferAddress) & spu_buffer_count_mask] = (spl1 + spu_buffer[((dLDIFF) + BufferAddress) & spu_buffer_count_mask] * vWALL - spu_buffer[((mRDIFF - 1) + BufferAddress) & spu_buffer_count_mask]) * vIIR + spu_buffer[((mRDIFF - 1) + BufferAddress) & spu_buffer_count_mask];
+// early echo
+Lout = vCOMB1 * spu_buffer[((mLCOMB1) + BufferAddress) & spu_buffer_count_mask] + vCOMB2 * spu_buffer[((mLCOMB2) + BufferAddress) & spu_buffer_count_mask] + vCOMB3 * spu_buffer[((mLCOMB3) + BufferAddress) & spu_buffer_count_mask] + vCOMB4 * spu_buffer[((mLCOMB4) + BufferAddress) & spu_buffer_count_mask];
+Rout = vCOMB1 * spu_buffer[((mRCOMB1) + BufferAddress) & spu_buffer_count_mask] + vCOMB2 * spu_buffer[((mRCOMB2) + BufferAddress) & spu_buffer_count_mask] + vCOMB3 * spu_buffer[((mRCOMB3) + BufferAddress) & spu_buffer_count_mask] + vCOMB4 * spu_buffer[((mRCOMB4) + BufferAddress) & spu_buffer_count_mask];
+// late reverb APF1
+Lout -= vAPF1 * spu_buffer[((mLAPF1 - dAPF1) + BufferAddress) & spu_buffer_count_mask]; spu_buffer[((mLAPF1) + BufferAddress) & spu_buffer_count_mask] = Lout; Lout = Lout * vAPF1 + spu_buffer[((mLAPF1 - dAPF1) + BufferAddress) & spu_buffer_count_mask];
+Rout -= vAPF1 * spu_buffer[((mRAPF1 - dAPF1) + BufferAddress) & spu_buffer_count_mask]; spu_buffer[((mRAPF1) + BufferAddress) & spu_buffer_count_mask] = Rout; Rout = Rout * vAPF1 + spu_buffer[((mRAPF1 - dAPF1) + BufferAddress) & spu_buffer_count_mask];
+// late reverb APF2
+Lout -= vAPF2 * spu_buffer[((mLAPF2 - dAPF2) + BufferAddress) & spu_buffer_count_mask]; spu_buffer[((mLAPF2) + BufferAddress) & spu_buffer_count_mask] = Lout; Lout = Lout * vAPF2 + spu_buffer[((mLAPF2 - dAPF2) + BufferAddress) & spu_buffer_count_mask];
+Rout -= vAPF2 * spu_buffer[((mRAPF2 - dAPF2) + BufferAddress) & spu_buffer_count_mask]; spu_buffer[((mRAPF2) + BufferAddress) & spu_buffer_count_mask] = Rout; Rout = Rout * vAPF2 + spu_buffer[((mRAPF2 - dAPF2) + BufferAddress) & spu_buffer_count_mask];
+BufferAddress = ((BufferAddress + 1) & spu_buffer_count_mask);
+spl0 = Lout * wet + spl0 * dry;
+spl1 = Rout * wet + spl1 * dry;

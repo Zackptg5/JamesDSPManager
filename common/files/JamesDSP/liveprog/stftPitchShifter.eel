@@ -1,0 +1,143 @@
+desc: Pitch shifter
+pitch_scaling_ratio:1.2<0.1,2,0.01>Which preset we use
+
+@init
+fftLen = 2048;
+halfLen = fftLen / 2 + 1;
+ovp = 4;
+ovpLen = fftLen / ovp;
+bufpos = 0;
+memReqStftStruct = stftStructSize();
+stftIndexLeft = 0;
+stftIndexRight = stftIndexLeft + memReqStftStruct;
+memreq = stftCheckMemoryRequirement(stftIndexLeft, fftLen, ovp, 1);
+memreq = stftCheckMemoryRequirement(stftIndexRight, fftLen, ovp, 1);
+stftStructLeft = stftIndexRight + memReqStftStruct;
+stftStructRight = stftStructLeft + memreq;
+requiredSamples = stftInit(stftIndexLeft, stftStructLeft);
+requiredSamples = stftInit(stftIndexRight, stftStructRight);
+dcReImSmps = 2;
+inBufLeft = stftStructRight + memreq; // Pointer to memory
+inBufRight = inBufLeft + fftLen + dcReImSmps;
+outBuf1Left = inBufRight + fftLen + dcReImSmps;
+outBuf1Right = outBuf1Left + fftLen + dcReImSmps;
+magSpec = outBuf1Right + fftLen + dcReImSmps; // halfLen + 4
+accumulated_rotation_anglesL = magSpec + (halfLen + 4); // halfLen
+accumulated_rotation_anglesR = accumulated_rotation_anglesL + halfLen; // halfLen
+peaks = accumulated_rotation_anglesR + halfLen; // halfLen
+inflRegionStart = peaks + halfLen; // halfLen
+inflRegionEnd = inflRegionStart + halfLen; // halfLen
+outBufLeft = inflRegionEnd + halfLen; // fftLen
+outBufRight = outBufLeft + fftLen; // fftLen
+reciFrameLen = 1 / fftLen;
+M_RECI2PI = 1.0 / $2PI;
+pitch_scaling_ratio = 1.2; // Pitch multiplier, 0.1 - 2.0
+
+@sample
+inBufLeft[bufpos] = spl0;
+spl0 = outBufLeft[bufpos];
+inBufRight[bufpos] = spl1;
+spl1 = outBufRight[bufpos];
+bufpos += 1;
+bufpos >= requiredSamples ?
+(
+	arrayLen = stftForward(inBufLeft, stftIndexLeft, stftStructLeft, 1);
+	arrayLen = stftForward(inBufRight, stftIndexRight, stftStructRight, 1);
+	magSpec[0] = 0;
+	magSpec[1] = 0;
+	magSpec[halfLen] = 0;
+	magSpec[halfLen + 1] = 0;
+	i=0;loop(halfLen, magSpec[(i >> 1) + 2] = (hypot(inBufLeft[i], inBufLeft[i + 1]) + hypot(inBufRight[i], inBufRight[i + 1])) * 0.5;i+=2);
+	//i=0;loop(halfLen + 4, printf("%d %f\n", i, magSpec[i]);i+=1);
+	nPeaks = 0;
+	i=0;
+	loop(halfLen, 
+		cond = (magSpec[i + 4] < magSpec[i + 2]) && (magSpec[i + 3] < magSpec[i + 2]) && (magSpec[i + 1] < magSpec[i + 2]) && (magSpec[i] < magSpec[i + 2]);
+		cond == 1 ? (
+			peaks[nPeaks] = i;
+			nPeaks = nPeaks + 1;
+		);
+	i+=1);
+	//printf("%d\n", nPeaks);
+	//j=0;loop(nPeaks, printf("%d\n", peaks[j]);j+=1);
+	//breakpoint();
+	nPeaks > 1 ? (
+		inflRegionStart[0] = 0;
+		i=1;
+		loop(nPeaks, 
+			res = peaks[i] + peaks[i - 1];
+			divisionTest = floor(res * 0.5);
+			inflRegionStart[i] = ((divisionTest * 2) != res) ? divisionTest + 1 : divisionTest;
+			inflRegionEnd[i - 1] = inflRegionStart[i];
+		i+=1);
+		inflRegionEnd[nPeaks - 1] = nPeaks;
+		//j=0;loop(nPeaks, printf("%d %d %d\n", peaks[j] + 1, inflRegionStart[j] + 1, inflRegionEnd[j]);j+=1);
+	);
+	//breakpoint();
+	memset(outBuf1Left, 0, fftLen + dcReImSmps);
+	memset(outBuf1Right, 0, fftLen + dcReImSmps);
+	u=0;
+	loop(nPeaks, 
+		p1 = peaks[u] + 1;
+		new_bin = pitch_scaling_ratio * p1;
+		// Compute the rotation angle required, which has to be cumulated from frame to frame
+		piInc = $2PI * ovpLen * (new_bin - p1) * reciFrameLen;
+		rotation_anglesL = accumulated_rotation_anglesL[peaks[u]] + piInc;
+		rotCplxReL = cos(rotation_anglesL);
+		rotCplxImL = sin(rotation_anglesL);
+		rotation_anglesR = accumulated_rotation_anglesR[peaks[u]] + piInc;
+		rotCplxReR = cos(rotation_anglesR);
+		rotCplxImR = sin(rotation_anglesR);
+		// Overlap-add the bins around the peak, changing the phases accordingly
+		tp = new_bin - p1;
+		forCnt = inflRegionEnd[u] - inflRegionStart[u];
+		i = inflRegionStart[u];
+		//printf("%d %f %f %f %f %f %d %d\n", p1, new_bin, rotation_anglesL, rotCplxReL, rotCplxImL, tp, forCnt, i);
+		//breakpoint();
+		loop(forCnt,
+			arrayIdx = i << 1;
+			idx = tp + i;
+			roundedIdx = floor(idx);
+			weight1 = idx - roundedIdx;
+			weight0 = 1.0 - weight1;
+			(roundedIdx < 0) ? (roundedIdx = 0);
+			(roundedIdx > (halfLen - 1)) ? (roundedIdx = halfLen - 1);
+			roundedIdxP1 = roundedIdx + 1;
+			(roundedIdxP1 < 0) ? (roundedIdxP1 = 0);
+			(roundedIdxP1 > (halfLen - 1)) ? (roundedIdxP1 = halfLen - 1);
+			accumulated_rotation_anglesL[i] = rotation_anglesL;
+			reL = inBufLeft[arrayIdx] * rotCplxReL - inBufLeft[arrayIdx + 1] * rotCplxImL;
+			imL = inBufLeft[arrayIdx] * rotCplxImL + inBufLeft[arrayIdx + 1] * rotCplxReL;
+			accumulated_rotation_anglesR[i] = rotation_anglesR;
+			reR = inBufRight[arrayIdx] * rotCplxReR - inBufRight[arrayIdx + 1] * rotCplxImR;
+			imR = inBufRight[arrayIdx] * rotCplxImR + inBufRight[arrayIdx + 1] * rotCplxReR;
+			lidx = roundedIdx << 1;
+			ridx = roundedIdxP1 << 1;
+			outBuf1Left[lidx] = outBuf1Left[lidx] + reL * weight0;
+			outBuf1Left[lidx + 1] = outBuf1Left[lidx + 1] + imL * weight0;
+			outBuf1Left[ridx] = outBuf1Left[roundedIdxP1 << 1] + reL * weight1;
+			outBuf1Left[ridx + 1] = outBuf1Left[ridx + 1] + imL * weight1;
+			outBuf1Right[lidx] = outBuf1Right[lidx] + reR * weight0;
+			outBuf1Right[lidx + 1] = outBuf1Right[lidx + 1] + imR * weight0;
+			outBuf1Right[ridx] = outBuf1Right[roundedIdxP1 << 1] + reR * weight1;
+			outBuf1Right[ridx + 1] = outBuf1Right[ridx + 1] + imR * weight1;
+			//printf("%f %f %f %f %d %d\n", reL, imL, weight0, weight1, roundedIdx, roundedIdxP1);
+		i+=1);
+		//breakpoint();
+	u+=1);
+	i=0;
+	loop(halfLen, 
+		lambda = accumulated_rotation_anglesL[i] + $PI;
+		truncate = floor(lambda * M_RECI2PI);
+		accumulated_rotation_anglesL[i] = lambda - truncate * $2PI - $PI;
+		lambda = accumulated_rotation_anglesR[i] + $PI;
+		truncate = floor(lambda * M_RECI2PI);
+		accumulated_rotation_anglesR[i] = lambda - truncate * $2PI - $PI;
+	i+=1);
+	//j=0;loop(halfLen, printf("%f\n", accumulated_rotation_anglesL[j]);j+=1);
+	//breakpoint();
+	error = stftBackward(outBuf1Left, stftIndexLeft, stftStructLeft, 1);
+	error = stftBackward(outBuf1Right, stftIndexRight, stftStructRight, 1);
+	i = 0;loop(requiredSamples, outBufLeft[i] = outBuf1Left[i];outBufRight[i] = outBuf1Right[i];i+=1);
+	bufpos = 0;
+);

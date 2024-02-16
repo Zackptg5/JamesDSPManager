@@ -99,6 +99,13 @@ for OFILE in ${CFGS}; do
            sed -i "/<effects>/ a\        <effect name=\"jamesdsp\" library=\"jdsp\" uuid=\"f27317f4-c984-4de6-9a90-545759495bf2\"\/>" $FILE;;
   esac
 done
+# Kitsune has extra partitions in different location
+if [ "$(echo $MAGISK_VER | awk -F- '{ print $NF}')" == "kitsune" ]; then
+  mkdir $MODPATH/root
+  for PART in $PARTITIONS; do
+    mv -f $MODPATH/system$PART $MODPATH/root
+  done
+fi
 
 # ODM support for regular magisk
 if $EXTRAPART || [ ! -d $MODPATH/system/odm ]; then
