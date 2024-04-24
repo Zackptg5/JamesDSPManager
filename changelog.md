@@ -1,3 +1,6 @@
+### v6.1 - 4.24.2024
+* mmtex v3.7 update
+
 ### v6.0 - 2.16.2024
 * mmtex v3.6 update
 * Update pbone apk
